@@ -1,0 +1,7 @@
+{
+  "name": "OmniMarket Multi-Vendor Marketplace",
+  "description": "A comprehensive multi-vendor e-commerce platform featuring role-based dashboards for Admins, Vendors, Customers, and Affiliates, including escrow-based payments, subscription management, and referral tracking.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

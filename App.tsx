@@ -1,196 +1,243 @@
 
-import React, { useState, useEffect } from 'react';
-import { Star, Lock, ArrowRight, X } from 'lucide-react';
-import { Role, User, Product, CartItem } from './types';
-import { mockProducts as initialProducts } from './constants';
-import Navbar from './components/Navbar';
-import CustomerHome from './views/CustomerHome';
-import VendorDashboard from './views/VendorDashboard';
-import AdminDashboard from './views/AdminDashboard';
-import AffiliateDashboard from './views/AffiliateDashboard';
-import CartView from './views/Cart';
-import LoginView from './views/Login';
-import ProductDetailsView from './views/ProductDetails';
-import CategoryCollectionView from './views/CategoryCollection';
-
-type ViewState = 'home' | 'cart' | 'dashboard' | 'login' | 'product-details' | 'admin-panel' | 'category-collection';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { AppView, User, DhikrTask, AdTask, PrayerTimes, Dua, Gojol, RewardItem } from './types';
+import { INITIAL_DHIKR_TASKS, INITIAL_PRAYER_TIMES, REWARDS } from './constants';
+import Dashboard from './views/Dashboard';
+import TasksView from './views/TasksView';
+import RewardsView from './views/RewardsView';
+import ProfileView from './views/ProfileView';
+import AuthView from './views/AuthView';
+import QuranHadithView from './views/QuranHadithView';
+import AdsView from './views/AdsView';
+import DonateView from './views/DonateView';
+import AdminView from './views/AdminView';
+import DuaView from './views/DuaView';
+import Notification from './components/Notification';
+import Onboarding from './components/Onboarding';
+import { 
+  Home, 
+  CheckCircle, 
+  Book, 
+  Gift, 
+  User as UserIcon, 
+  Bell, 
+  Heart,
+  Globe,
+  Settings
+} from 'lucide-react';
 
 const App: React.FC = () => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [currentView, setCurrentView] = useState<ViewState>('home');
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
+  const [currentView, setCurrentView] = useState<AppView>('home');
+  const [tasks, setTasks] = useState<DhikrTask[]>([]);
+  const [ads, setAds] = useState<AdTask[]>([]);
+  const [duas, setDuas] = useState<Dua[]>([]);
+  const [gojols, setGojols] = useState<Gojol[]>([]);
+  const [rewards, setRewards] = useState<RewardItem[]>([]);
+  const [prayerTimes, setPrayerTimes] = useState<PrayerTimes>(INITIAL_PRAYER_TIMES);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMsg, setNotificationMsg] = useState('');
+  const [showOnboarding, setShowOnboarding] = useState(false);
   
-  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
-  const [adminPassInput, setAdminPassInput] = useState('');
-  const [passError, setPassError] = useState(false);
+  const notifiedRefs = useRef<Record<string, boolean>>({});
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('omni_user');
-    if (savedUser) setCurrentUser(JSON.parse(savedUser));
-    const savedProducts = localStorage.getItem('omni_products');
-    if (savedProducts) setProducts(JSON.parse(savedProducts));
+    // Load User
+    const savedUser = localStorage.getItem('ni_user');
+    if (savedUser) setUser(JSON.parse(savedUser));
+
+    // Load All Users
+    const savedUsers = localStorage.getItem('ni_all_users');
+    if (savedUsers) setUsers(JSON.parse(savedUsers));
+
+    // Load Prayer Times
+    const savedPrayerTimes = localStorage.getItem('ni_prayer_times');
+    if (savedPrayerTimes) setPrayerTimes(JSON.parse(savedPrayerTimes));
+
+    // Load Tasks
+    const savedTasks = localStorage.getItem('ni_tasks');
+    setTasks(savedTasks ? JSON.parse(savedTasks) : INITIAL_DHIKR_TASKS);
+
+    // Load Rewards
+    const savedRewards = localStorage.getItem('ni_rewards');
+    setRewards(savedRewards ? JSON.parse(savedRewards) : REWARDS);
+
+    // Load Duas
+    const savedDuas = localStorage.getItem('ni_duas');
+    if (savedDuas) {
+      setDuas(JSON.parse(savedDuas));
+    } else {
+      const initialDuas: Dua[] = [
+        { id: 'd1', title: 'ঘুমানোর দোয়া', arabic: 'بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا', pronunciation: 'বিসমিকাল্লাহুম্মা আমুতু ওয়া আহ্ইয়া', meaning: 'হে আল্লাহ! আপনারই নামে আমি মৃত্যুবরণ করি (ঘুমাই) এবং আপনারই নামে জীবিত হই (জাগি)।' },
+        { id: 'd2', title: 'ঘুম থেকে জাগার দোয়া', arabic: 'الْحَمْدُ لِلَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا وَإِلَيْهِ النُّشُورُ', pronunciation: 'আলহামদুলিল্লাহিল্লাজি আহ্ইয়ানা বা’দা মা আমাতানা ওয়া ইলাইহিন নুশুর', meaning: 'সমস্ত প্রশংসা সেই আল্লাহর জন্য, যিনি আমাদের মারার পর জীবিত করলেন। আর তাঁর দিকেই সকলের প্রত্যাবর্তন।' }
+      ];
+      setDuas(initialDuas);
+      localStorage.setItem('ni_duas', JSON.stringify(initialDuas));
+    }
+
+    // Load Gojols
+    const savedGojols = localStorage.getItem('ni_gojols');
+    if (savedGojols) {
+      setGojols(JSON.parse(savedGojols));
+    } else {
+      const initialGojols: Gojol[] = [
+        { id: 'g1', title: 'আল্লাহু আল্লাহু', lyrics: 'আল্লাহু আল্লাহু তুমি জাল্লে জালালুহু\nশেষ করা তো যায় না গেয়ে তোমার গুনগান।\n\nতুমি কাদের তুমি গাফফার তুমি রহিম তুমি রহমান\nতোমার নূরের জ্যুতি দিয়ে গড়া এই আসমান।' },
+        { id: 'g2', title: 'সালাত ও সালাম', lyrics: 'ইয়া নবী সালাম আলাইকা\nইয়া রাসুল সালাম আলাইকা\nইয়া হাবিব সালাম আলাইকা\nসালাওয়াতুল্লাহ আলাইকা।' }
+      ];
+      setGojols(initialGojols);
+      localStorage.setItem('ni_gojols', JSON.stringify(initialGojols));
+    }
+
+    // Load Ads
+    const savedAds = localStorage.getItem('ni_ads');
+    if (savedAds) {
+      setAds(JSON.parse(savedAds));
+    } else {
+      const initialAds: AdTask[] = Array.from({ length: 20 }).map((_, i) => ({
+        id: `ad-${i}`,
+        url: `https://google.com/search?q=islamic+site+${i}`,
+        rewardPoints: 2,
+        visited: false
+      }));
+      setAds(initialAds);
+    }
+
+    const hasSeenOnboarding = localStorage.getItem('ni_onboarding_seen');
+    if (!hasSeenOnboarding && savedUser) setShowOnboarding(true);
   }, []);
 
+  // Prayer notification check
   useEffect(() => {
-    localStorage.setItem('omni_products', JSON.stringify(products));
-  }, [products]);
+    const checkPrayers = () => {
+      if (!user) return;
+      const now = new Date();
+      const currentDay = now.toDateString();
 
-  const handleLogout = () => {
-    setCurrentUser(null);
-    localStorage.removeItem('omni_user');
-    setCurrentView('home');
+      Object.entries(prayerTimes).forEach(([name, timeStr]) => {
+        if (!['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'].includes(name)) return;
+        if (!user.notificationSettings[name as keyof typeof user.notificationSettings]) return;
+
+        try {
+          const [time, modifier] = timeStr.split(' ');
+          let [hours, minutes] = time.split(':').map(Number);
+          if (modifier === 'PM' && hours < 12) hours += 12;
+          if (modifier === 'AM' && hours === 12) hours = 0;
+
+          const prayerDate = new Date();
+          prayerDate.setHours(hours, minutes, 0, 0);
+
+          const notifyTime = new Date(prayerDate.getTime() - 5 * 60000);
+          
+          const key = `${currentDay}-${name}`;
+          if (now >= notifyTime && now < prayerDate && !notifiedRefs.current[key]) {
+            setNotificationMsg(`${name.charAt(0).toUpperCase() + name.slice(1)} সালাতের ৫ মিনিট বাকি।`);
+            setShowNotification(true);
+            playSound('alarm');
+            notifiedRefs.current[key] = true;
+          }
+        } catch (e) {
+          console.error("Error parsing prayer time", e);
+        }
+      });
+    };
+
+    const interval = setInterval(checkPrayers, 30000);
+    return () => clearInterval(interval);
+  }, [user, prayerTimes]);
+
+  const playSound = (type: 'taskDone' | 'allDone' | 'alarm') => {
+    const urls = {
+      taskDone: 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3',
+      allDone: 'https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3',
+      alarm: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'
+    };
+    const audio = new Audio(urls[type]);
+    audio.volume = 0.5;
+    audio.play().catch((e) => console.log('Audio play blocked', e));
   };
 
-  const handleAdminAccess = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (adminPassInput === '9192') {
-      setIsAdminModalOpen(false);
-      setAdminPassInput('');
-      setPassError(false);
-      setCurrentView('admin-panel');
-    } else {
-      setPassError(true);
-    }
-  };
+  useEffect(() => {
+    if (user) localStorage.setItem('ni_user', JSON.stringify(user));
+  }, [user]);
 
-  const handleAddProduct = (newProduct: Product) => {
-    setProducts(prev => [newProduct, ...prev]);
-  };
-
-  const handleDeleteProduct = (id: string) => {
-    setProducts(prev => prev.filter(p => p.id !== id));
+  const handleIncrementDhikr = (id: string) => {
+    setTasks(prev => {
+      let taskJustFinished = false;
+      let finishedTaskTitle = '';
+      const updatedTasks = prev.map(t => {
+        if (t.id === id && !t.completed) {
+          const newCount = t.count + 1;
+          if (newCount === t.target) {
+            taskJustFinished = true;
+            finishedTaskTitle = t.title;
+            return { ...t, count: newCount, completed: true };
+          }
+          return { ...t, count: newCount };
+        }
+        return t;
+      });
+      if (taskJustFinished) {
+        playSound(updatedTasks.every(t => t.completed) ? 'allDone' : 'taskDone');
+        setNotificationMsg(`${finishedTaskTitle} সম্পন্ন! +১০ পয়েন্ট`);
+        setShowNotification(true);
+        if (user) setUser({ ...user, points: user.points + 10 });
+        localStorage.setItem('ni_tasks', JSON.stringify(updatedTasks));
+      }
+      return updatedTasks;
+    });
   };
 
   const renderView = () => {
-    if (currentView === 'admin-panel') {
-      return (
-        <AdminDashboard 
-          products={products} 
-          onAddProduct={handleAddProduct} 
-          onDeleteProduct={handleDeleteProduct} 
-        />
-      );
-    }
-
     switch (currentView) {
-      case 'home':
-        return (
-          <CustomerHome 
-            products={products} 
-            onAddToCart={(p) => setCart([...cart, {product: p, quantity: 1}])} 
-            onSelectProduct={(p) => { setSelectedProduct(p); setCurrentView('product-details'); }}
-            onViewCategory={(catId) => { setSelectedCategoryId(catId); setCurrentView('category-collection'); }}
-          />
-        );
-      case 'category-collection':
-        return (
-          <CategoryCollectionView 
-            categoryId={selectedCategoryId || ''}
-            products={products}
-            onBack={() => setCurrentView('home')}
-            onSelectProduct={(p) => { setSelectedProduct(p); setCurrentView('product-details'); }}
-            onAddToCart={(p) => setCart([...cart, {product: p, quantity: 1}])}
-          />
-        );
-      case 'cart':
-        return <CartView cart={cart} onUpdateQty={() => {}} onRemove={() => {}} onCheckout={() => {}} />;
-      case 'product-details':
-        return selectedProduct ? (
-          <ProductDetailsView 
-            product={selectedProduct} 
-            onAddToCart={(p) => setCart([...cart, {product: p, quantity: 1}])} 
-            onBack={() => setCurrentView('home')} 
-          />
-        ) : null;
-      case 'login':
-        return <LoginView onLogin={(u) => { setCurrentUser(u); setCurrentView('home'); }} setView={setCurrentView} />;
-      case 'dashboard':
-        if (!currentUser) return <LoginView onLogin={setCurrentUser} setView={setCurrentView} />;
-        if (currentUser.role === Role.ADMIN) return <AdminDashboard products={products} onAddProduct={handleAddProduct} onDeleteProduct={handleDeleteProduct} />;
-        if (currentUser.role === Role.VENDOR) return <VendorDashboard vendor={currentUser} />;
-        if (currentUser.role === Role.AFFILIATE || currentUser.role === Role.RESELLER) return <AffiliateDashboard affiliate={currentUser} />;
-        return <div className="p-20 text-center font-bold">User Profile</div>;
-      default:
-        return <CustomerHome products={products} onAddToCart={() => {}} onSelectProduct={() => {}} onViewCategory={() => {}} />;
+      case 'home': return <Dashboard user={user!} onNavigate={setCurrentView} prayerTimes={prayerTimes} />;
+      case 'tasks': return <TasksView tasks={tasks} onIncrement={handleIncrementDhikr} />;
+      case 'quran': return <QuranHadithView gojols={gojols} />;
+      case 'duas': return <DuaView duas={duas} />;
+      case 'store': return <RewardsView userPoints={user!.points} rewards={rewards} />;
+      case 'ads': return <AdsView ads={ads} onVisit={(id) => {
+        setAds(prev => prev.map(a => a.id === id && !a.visited ? (setUser({ ...user!, points: user!.points + a.rewardPoints }), { ...a, visited: true }) : a));
+      }} onAdminTrigger={() => setCurrentView('admin')} />;
+      case 'profile': return <ProfileView user={user!} setUser={setUser} onLogout={() => { localStorage.removeItem('ni_user'); setUser(null); }} />;
+      case 'donate': return <DonateView />;
+      case 'admin': return <AdminView 
+        onExit={() => setCurrentView('home')} 
+        prayerTimes={prayerTimes} 
+        setPrayerTimes={(t) => { setPrayerTimes(t); localStorage.setItem('ni_prayer_times', JSON.stringify(t)); }} 
+        ads={ads} setAds={(a) => { setAds(a); localStorage.setItem('ni_ads', JSON.stringify(a)); }}
+        allUsers={users} setAllUsers={(u) => { setUsers(u); localStorage.setItem('ni_all_users', JSON.stringify(u)); }}
+        tasks={tasks} setTasks={(t) => { setTasks(t); localStorage.setItem('ni_tasks', JSON.stringify(t)); }}
+        rewards={rewards} setRewards={(r) => { setRewards(r); localStorage.setItem('ni_rewards', JSON.stringify(r)); }}
+        duas={duas} setDuas={(d) => { setDuas(d); localStorage.setItem('ni_duas', JSON.stringify(d)); }}
+        gojols={gojols} setGojols={(g) => { setGojols(g); localStorage.setItem('ni_gojols', JSON.stringify(g)); }}
+      />;
+      default: return <Dashboard user={user!} onNavigate={setCurrentView} prayerTimes={prayerTimes} />;
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative bg-gray-50">
-      <Navbar 
-        user={currentUser} 
-        cartCount={cart.length}
-        onNavigate={(v) => { setCurrentView(v as ViewState); setIsMenuOpen(false); }} 
-        onLogout={handleLogout}
-        isMenuOpen={isMenuOpen}
-        setIsMenuOpen={setIsMenuOpen}
-      />
-      
-      <main className="flex-grow container mx-auto px-4 py-4 md:py-10">
-        {renderView()}
-      </main>
-
-      {/* Even Smaller Star Button for Mobile Responsive Design */}
-      <button 
-        onClick={() => setIsAdminModalOpen(true)}
-        className="fixed bottom-4 right-4 w-8 h-8 md:w-10 md:h-10 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all z-50 group border border-white/50"
-        aria-label="Admin"
-      >
-        <Star className="w-4 h-4 md:w-5 md:h-5 group-hover:rotate-180 transition-transform duration-700 fill-current" />
-      </button>
-
-      {/* Admin Password Modal */}
-      {isAdminModalOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-[2rem] p-6 md:p-10 max-w-sm w-full shadow-2xl animate-in zoom-in duration-300">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-black text-gray-900">Admin Key</h2>
-              <button onClick={() => setIsAdminModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-1">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <form onSubmit={handleAdminAccess} className="space-y-6">
-              <div className="space-y-2 text-center">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Master Password</label>
-                <input 
-                  type="password" 
-                  value={adminPassInput}
-                  onChange={(e) => setAdminPassInput(e.target.value)}
-                  required
-                  autoFocus
-                  className={`w-full bg-gray-50 border-2 ${passError ? 'border-red-500 animate-shake' : 'border-gray-100'} rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500 outline-none font-black text-xl text-center tracking-[0.4em]`}
-                  placeholder="••••"
-                />
-                {passError && <p className="text-red-500 text-[10px] font-bold">Incorrect Key</p>}
-              </div>
-              <button 
-                type="submit"
-                className="w-full py-4 bg-blue-600 text-white rounded-xl font-black shadow-lg hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
-              >
-                Access System <ArrowRight className="w-4 h-4" />
-              </button>
-            </form>
-          </div>
+    <div className="max-w-md mx-auto bg-slate-50 min-h-screen pb-24 relative overflow-x-hidden">
+      <header className="bg-emerald-600 text-white p-6 rounded-b-[40px] shadow-lg sticky top-0 z-40 flex justify-between items-center">
+        <div><h1 className="text-xl font-black">Daily Muslim</h1><p className="text-xs opacity-80">ঈমানের পথে নতুন যাত্রা</p></div>
+        <div className="flex items-center space-x-3">
+          <button onClick={() => setCurrentView('donate')} className="bg-rose-500 hover:bg-rose-400 px-4 py-2 rounded-2xl transition-all flex items-center gap-2 border border-white/20 shadow-lg group active:scale-95">
+            <Heart size={16} className="text-white fill-white group-hover:scale-125 transition-transform" />
+            <span className="text-[11px] font-black uppercase tracking-wider text-white">দান করুন</span>
+          </button>
+          <div className="bg-white/20 px-3 py-1 rounded-full flex items-center space-x-2"><span className="text-amber-300 text-lg">★</span><span className="font-bold text-sm">{user?.points || 0}</span></div>
         </div>
-      )}
-
-      <footer className="bg-white border-t mt-12 py-8">
-        <div className="container mx-auto px-4 text-center space-y-4">
-           <div className="inline-flex items-center gap-2 text-blue-600 font-black">
-              <Star className="w-4 h-4 fill-current" /> AI MARKETPLACE
-           </div>
-           <p className="text-gray-400 text-xs md:text-sm max-w-xs mx-auto">Safe and secure multi-vendor marketplace platform.</p>
-           <div className="pt-4 border-t border-gray-100">
-             <div className="text-[10px] text-gray-500 font-black tracking-[0.2em] uppercase">
-               Developed by MD ZOBAER HASAN
-             </div>
-           </div>
-        </div>
-      </footer>
+      </header>
+      <main className="px-5 py-6">{user ? renderView() : <AuthView onAuthSuccess={setUser} />}</main>
+      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/80 backdrop-blur-md border-t border-slate-100 flex justify-around items-center h-20 px-4 rounded-t-3xl shadow-2xl z-50">
+        {[ { id: 'home', icon: Home, label: 'হোম' }, { id: 'tasks', icon: CheckCircle, label: 'টাস্ক' }, { id: 'quran', icon: Book, label: 'কুরআন' }, { id: 'ads', icon: Globe, label: 'ভিজিট' }, { id: 'profile', icon: UserIcon, label: 'প্রোফাইল' } ].map(item => (
+          <button key={item.id} onClick={() => setCurrentView(item.id as AppView)} className={`flex flex-col items-center justify-center space-y-1 transition-all duration-300 w-16 h-16 rounded-2xl ${currentView === item.id ? 'bg-emerald-600 text-white shadow-lg -translate-y-2' : 'text-slate-400'}`}>
+            <item.icon size={22} strokeWidth={currentView === item.id ? 2.5 : 2} />
+            <span className="text-[10px] font-bold">{item.label}</span>
+          </button>
+        ))}
+      </nav>
+      <Notification isVisible={showNotification} message={notificationMsg} onClose={() => setShowNotification(false)} />
+      {showOnboarding && <Onboarding onComplete={() => { setShowOnboarding(false); localStorage.setItem('ni_onboarding_seen', 'true'); }} />}
     </div>
   );
 };

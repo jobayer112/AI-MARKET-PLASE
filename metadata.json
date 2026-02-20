@@ -1,7 +1,8 @@
 {
-  "name": "OmniMarket Multi-Vendor Marketplace",
-  "description": "A comprehensive multi-vendor e-commerce platform featuring role-based dashboards for Admins, Vendors, Customers, and Affiliates, including escrow-based payments, subscription management, and referral tracking.",
+  "name": "Daily Muslim: Ultimate Islamic Companion",
+  "description": "A comprehensive Islamic application featuring daily Dhikr tasks with counters, prayer timings, Ramadan schedules, reward systems for points, and a professional spiritual dashboard.",
   "requestFramePermissions": [
-    "camera"
+    "camera",
+    "geolocation"
   ]
 }

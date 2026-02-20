@@ -1,94 +1,68 @@
 
-export enum Role {
-  ADMIN = 'ADMIN',
-  VENDOR = 'VENDOR',
-  CUSTOMER = 'CUSTOMER',
-  AFFILIATE = 'AFFILIATE',
-  RESELLER = 'RESELLER'
-}
-
-export enum OrderStatus {
-  PENDING = 'PENDING',
-  PAID = 'PAID',
-  SHIPPED = 'SHIPPED',
-  DELIVERED = 'DELIVERED',
-  COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED'
-}
-
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: Role;
-  referralCode?: string;
+  points: number;
+  referralCode: string;
   referredBy?: string;
-  walletBalance: number;
-  activeSubscription?: VendorSubscription;
+  joinedDate: string;
+  profilePicture?: string;
+  notificationSettings: {
+    fajr: boolean;
+    dhuhr: boolean;
+    asr: boolean;
+    maghrib: boolean;
+    isha: boolean;
+  };
 }
 
-export interface VendorSubscription {
-  planId: string;
-  endsAt: Date;
-  commissionPct: number;
-  productLimit: number;
-}
-
-export interface Product {
+export interface DhikrTask {
   id: string;
-  vendorId: string;
-  vendorName: string;
-  categoryId: string;
+  title: string;
+  arabic: string;
+  target: number;
+  count: number;
+  completed: boolean;
+  points: number;
+}
+
+export interface RewardItem {
+  id: string;
   name: string;
-  description: string;
-  price: number;
-  stock: number;
-  imageUrls: string[];
-  rating: number;
-  reviewsCount: number;
-  // SEO Fields
-  metaTitle?: string;
-  metaDescription?: string;
-  metaKeywords?: string;
+  pointsRequired: number;
+  image: string;
 }
 
-export interface CartItem {
-  product: Product;
-  quantity: number;
-}
-
-export interface Order {
+export interface AdTask {
   id: string;
-  customerId: string;
-  items: OrderItem[];
-  totalAmount: number;
-  status: OrderStatus;
-  createdAt: string;
-  escrowReleaseDate?: string;
+  url: string;
+  rewardPoints: number;
+  visited: boolean;
 }
 
-export interface OrderItem {
-  productId: string;
-  vendorId: string;
-  name: string;
-  quantity: number;
-  price: number;
-  vendorCommissionPct: number;
-}
-
-export interface LedgerEntry {
+export interface Dua {
   id: string;
-  userId?: string;
-  type: 'CREDIT' | 'DEBIT';
-  amount: number;
-  reason: string;
-  timestamp: string;
+  title: string;
+  arabic: string;
+  pronunciation: string;
+  meaning: string;
 }
 
-export interface DashboardStats {
-  totalSales: number;
-  totalCommission: number;
-  pendingPayouts: number;
-  activeVendors: number;
-  affiliatePayouts: number;
+export interface Gojol {
+  id: string;
+  title: string;
+  lyrics: string;
+}
+
+export type AppView = 'home' | 'tasks' | 'quran' | 'store' | 'ads' | 'profile' | 'donate' | 'admin' | 'duas';
+
+export interface PrayerTimes {
+  fajr: string;
+  dhuhr: string;
+  asr: string;
+  maghrib: string;
+  isha: string;
+  sahari: string;
+  iftar: string;
 }
